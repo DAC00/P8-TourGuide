@@ -1,5 +1,7 @@
 package com.openclassrooms.tourguide.service;
 
+import com.openclassrooms.tourguide.dto.AttractionDTO;
+import com.openclassrooms.tourguide.dto.NearbyAttractionsDTO;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -10,7 +12,9 @@ import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
@@ -29,6 +33,9 @@ public class TourGuideService {
     public final Tracker tracker;
     boolean testMode = true;
 
+    @Autowired
+    private RewardCentral rewardCentral;
+
     public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
@@ -41,6 +48,7 @@ public class TourGuideService {
             initializeInternalUsers();
             logger.debug("Finished initializing users");
         }
+
         tracker = new Tracker(this);
         addShutDownHook();
     }
@@ -85,6 +93,12 @@ public class TourGuideService {
         return visitedLocation;
     }
 
+    /**
+     * Get the closest five Attraction to the user no matter how far away.
+     *
+     * @param visitedLocation for the Location of the User.
+     * @return a List of Attraction.
+     */
     public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
         List<Attraction> nearbyAttractions = new ArrayList<>();
         List<Attraction> attractions = gpsUtil.getAttractions();
@@ -97,8 +111,35 @@ public class TourGuideService {
         for (int i = 0; i < Math.min(5, attractions.size()); i++) {
             nearbyAttractions.add(attractions.get(i));
         }
-
         return nearbyAttractions;
+    }
+
+    /**
+     * Get the closest five tourist attractions to the user - no matter how far away they are in a DTO object.
+     * Contains user Location and a list of (Attraction name / Location / Distance from User and Reward Points)
+     * for each of the five Attractions.
+     *
+     * @param visitedLocation for the Location of the User.
+     * @return a DTO Object.
+     */
+    public NearbyAttractionsDTO getNearbyAttractionsDTO(VisitedLocation visitedLocation) {
+        List<Attraction> attractions = getNearByAttractions(visitedLocation);
+        List<AttractionDTO> attractionDTOS = new ArrayList<>();
+        NearbyAttractionsDTO dto = new NearbyAttractionsDTO();
+
+        for (Attraction attraction : attractions) {
+            Location attLocation = new Location(attraction.latitude, attraction.longitude);
+            attractionDTOS.add(new AttractionDTO(
+                    attraction.attractionName,
+                    attLocation,
+                    rewardsService.getDistance(visitedLocation.location, attLocation),
+                    rewardCentral.getAttractionRewardPoints(visitedLocation.userId, attraction.attractionId))
+            );
+        }
+
+        dto.setUserLocation(visitedLocation.location);
+        dto.setAttractions(attractionDTOS);
+        return dto;
     }
 
     private void addShutDownHook() {
