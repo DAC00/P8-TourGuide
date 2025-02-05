@@ -9,6 +9,8 @@ import gpsUtil.location.VisitedLocation;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -37,15 +39,20 @@ public class RewardsService {
 
     public void calculateRewards(User user) {
         CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
-        CopyOnWriteArrayList<Attraction> attractions = new CopyOnWriteArrayList<>(gpsUtil.getAttractions());
+        CopyOnWriteArrayList<UserReward> userRewards = new CopyOnWriteArrayList<>(user.getUserRewards());
+        List<Attraction> attractions = gpsUtil.getAttractions();
+        List<UserReward> newRewardsTOAdd = new ArrayList<>();
 
         for (VisitedLocation visitedLocation : userLocations) {
             for (Attraction attraction : attractions) {
-                if (nearAttraction(visitedLocation, attraction)) {
-                    user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+                if (nearAttraction(visitedLocation, attraction) && userRewards.stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+                    UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
+                    userRewards.add(userReward);
+                    newRewardsTOAdd.add(userReward);
                 }
             }
         }
+        for (UserReward userReward : newRewardsTOAdd) user.addUserReward(userReward);
     }
 
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
