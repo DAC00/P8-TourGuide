@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTourGuideService {
 
@@ -94,6 +94,28 @@ public class TestTourGuideService {
         tourGuideService.tracker.stopTracking();
 
         assertEquals(user.getUserId(), visitedLocation.userId);
+    }
+
+    @Test
+    public void trackUsers() {
+        GpsUtil gpsUtil = new GpsUtil();
+        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+
+        InternalTestHelper.setInternalUserNumber(0);
+
+        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+
+        List<User> allUsers = new ArrayList<>();
+        allUsers.add(new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com"));
+        allUsers.add(new User(UUID.randomUUID(), "bob", "001", "bob@tourGuide.com"));
+        allUsers.add(new User(UUID.randomUUID(), "bill", "002", "bill@tourGuide.com"));
+
+        tourGuideService.trackUsersLocation(allUsers);
+
+        tourGuideService.tracker.stopTracking();
+
+        allUsers.forEach(u -> assertNotNull(u.getVisitedLocations()));
+
     }
 
     @Test

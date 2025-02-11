@@ -21,6 +21,10 @@ import tripPricer.TripPricer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -91,6 +95,24 @@ public class TourGuideService {
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
         return visitedLocation;
+    }
+
+    public void trackUsersLocation(List<User> users) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(30);
+        for (User user : users) {
+            futures.add(CompletableFuture.runAsync(() -> {
+                trackUserLocation(user);
+            }, executorService));
+        }
+        for (CompletableFuture<Void> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.debug("Error : %s".formatted(e));
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**

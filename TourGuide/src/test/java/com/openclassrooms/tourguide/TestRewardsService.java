@@ -61,4 +61,19 @@ public class TestRewardsService {
         assertEquals(gpsUtil.getAttractions().size(), userRewards.size());
     }
 
+    @Test
+    public void nearAllAttractionsMultipleUsers() {
+        GpsUtil gpsUtil = new GpsUtil();
+        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+        rewardsService.setProximityBuffer(Integer.MAX_VALUE);
+
+        InternalTestHelper.setInternalUserNumber(10);
+        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+
+        rewardsService.calculateRewardsForAllUsers(tourGuideService.getAllUsers());
+
+        tourGuideService.tracker.stopTracking();
+
+        tourGuideService.getAllUsers().forEach(user -> assertEquals(gpsUtil.getAttractions().size(), user.getUserRewards().size()));
+    }
 }

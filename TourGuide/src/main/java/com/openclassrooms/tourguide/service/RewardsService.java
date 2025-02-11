@@ -6,16 +6,20 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 @Service
 public class RewardsService {
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
+
+    private Logger logger = LoggerFactory.getLogger(RewardsService.class);
 
     // proximity in miles
     private int defaultProximityBuffer = 10;
@@ -53,6 +57,24 @@ public class RewardsService {
             }
         }
         for (UserReward userReward : newRewardsTOAdd) user.addUserReward(userReward);
+    }
+
+    public void calculateRewardsForAllUsers(List<User> users) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(70);
+        for (User user : users) {
+            futures.add(CompletableFuture.runAsync(() -> {
+                calculateRewards(user);
+            }, executorService));
+        }
+        for (CompletableFuture<Void> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.debug("Error : %s".formatted(e));
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
