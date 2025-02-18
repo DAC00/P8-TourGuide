@@ -90,6 +90,12 @@ public class TourGuideService {
         return providers;
     }
 
+    /**
+     * Update the data of a User and return the new VisitedLocation.
+     *
+     * @param user to be updated.
+     * @return the last visitedLocation.
+     */
     public VisitedLocation trackUserLocation(User user) {
         VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
@@ -97,6 +103,12 @@ public class TourGuideService {
         return visitedLocation;
     }
 
+    /**
+     * Update data of a list of User. Each call of trackUserLocation is a CompletableFuture to be more efficient.
+     * The thread pool is 30.
+     *
+     * @param users a list of User.
+     */
     public void trackUsersLocation(List<User> users) {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         ExecutorService executorService = Executors.newFixedThreadPool(30);
