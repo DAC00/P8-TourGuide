@@ -36,3 +36,9 @@ jobs:
       run: |
         cd TourGuide
         mvn test
+
+    - name: Upload p8_jar
+      uses: actions/upload-artifact@v4
+      with:
+        name: p8_jar
+        path: target/*.jar
