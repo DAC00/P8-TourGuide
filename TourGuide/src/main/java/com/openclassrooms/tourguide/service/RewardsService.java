@@ -59,9 +59,15 @@ public class RewardsService {
         for (UserReward userReward : newRewardsTOAdd) user.addUserReward(userReward);
     }
 
+    /**
+     * For each User on the list use a CompletableFuture to calculateRewards to be more efficient.
+     * The thread pool is 50. Use only for testing highVolumeGetRewards.
+     *
+     * @param users is the list of User.
+     */
     public void calculateRewardsForAllUsers(List<User> users) {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(70);
+        ExecutorService executorService = Executors.newFixedThreadPool(50);
         for (User user : users) {
             futures.add(CompletableFuture.runAsync(() -> {
                 calculateRewards(user);
