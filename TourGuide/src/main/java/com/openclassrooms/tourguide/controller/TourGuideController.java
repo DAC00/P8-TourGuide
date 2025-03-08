@@ -24,6 +24,12 @@ public class TourGuideController {
         return "Greetings from TourGuide!";
     }
 
+    /**
+     * Get the VisitedLocation of the User with userName.
+     *
+     * @param userName name of the User.
+     * @return the last VisitedLocation of the User.
+     */
     @RequestMapping("/getLocation")
     public VisitedLocation getLocation(@RequestParam String userName) {
         return tourGuideService.getUserLocation(getUser(userName));
@@ -43,16 +49,34 @@ public class TourGuideController {
         return tourGuideService.getNearbyAttractionsDTO(visitedLocation);
     }
 
+    /**
+     * Get all UserReward of the User with the userName.
+     *
+     * @param userName name of the User.
+     * @return a list of UserReward.
+     */
     @RequestMapping("/getRewards")
     public List<UserReward> getRewards(@RequestParam String userName) {
         return tourGuideService.getUserRewards(getUser(userName));
     }
 
+    /**
+     * Get all the Trips deals from TripPricer for the User with userName.
+     *
+     * @param userName name of the User.
+     * @return a list of Provider.
+     */
     @RequestMapping("/getTripDeals")
     public List<Provider> getTripDeals(@RequestParam String userName) {
         return tourGuideService.getTripDeals(getUser(userName));
     }
 
+    /**
+     * Get the User with userName.
+     *
+     * @param userName name of the User.
+     * @return the User.
+     */
     private User getUser(String userName) {
         return tourGuideService.getUser(userName);
     }

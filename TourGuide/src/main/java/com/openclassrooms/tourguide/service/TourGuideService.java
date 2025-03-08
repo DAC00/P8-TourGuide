@@ -57,30 +57,64 @@ public class TourGuideService {
         addShutDownHook();
     }
 
+    /**
+     * Get the list of UserReward from a User.
+     *
+     * @param user to get the list from.
+     * @return a list of UserReward.
+     */
     public List<UserReward> getUserRewards(User user) {
         return user.getUserRewards();
     }
 
+    /**
+     * Get the VisitedLocation from the User, which is his last location.
+     *
+     * @param user to get location from.
+     * @return User location.
+     */
     public VisitedLocation getUserLocation(User user) {
         VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
                 : trackUserLocation(user);
         return visitedLocation;
     }
 
+    /**
+     * Get the User with userName from the internalUserMap.
+     *
+     * @param userName of the User to get.
+     * @return the User with userName.
+     */
     public User getUser(String userName) {
         return internalUserMap.get(userName);
     }
 
+    /**
+     * Get a list of all the User from internalUserMap.
+     *
+     * @return a list of all User.
+     */
     public List<User> getAllUsers() {
         return internalUserMap.values().stream().collect(Collectors.toList());
     }
 
+    /**
+     * Add a User to the internalUserMap.
+     *
+     * @param user to add.
+     */
     public void addUser(User user) {
         if (!internalUserMap.containsKey(user.getUserName())) {
             internalUserMap.put(user.getUserName(), user);
         }
     }
 
+    /**
+     * Get a list of Provider for the User. Use TripPricer to get trip deals.
+     *
+     * @param user to get deals for.
+     * @return a list of Provider.
+     */
     public List<Provider> getTripDeals(User user) {
         int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
         List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(),
@@ -176,6 +210,9 @@ public class TourGuideService {
         return dto;
     }
 
+    /**
+     * Stop the Tracker.
+     */
     private void addShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -194,6 +231,9 @@ public class TourGuideService {
     // internal users are provided and stored in memory
     private final Map<String, User> internalUserMap = new HashMap<>();
 
+    /**
+     * Initialize internal users, populate the internalUserMap with a number of User.
+     */
     private void initializeInternalUsers() {
         IntStream.range(0, InternalTestHelper.getInternalUserNumber()).forEach(i -> {
             String userName = "internalUser" + i;
@@ -207,6 +247,11 @@ public class TourGuideService {
         logger.debug("Created " + InternalTestHelper.getInternalUserNumber() + " internal test users.");
     }
 
+    /**
+     * Generate a multiple VisitedLocation and add it to the User.
+     *
+     * @param user to modify.
+     */
     private void generateUserLocationHistory(User user) {
         IntStream.range(0, 3).forEach(i -> {
             user.addToVisitedLocations(new VisitedLocation(user.getUserId(),
@@ -214,18 +259,33 @@ public class TourGuideService {
         });
     }
 
+    /**
+     * Get a random longitude.
+     *
+     * @return a random longitude.
+     */
     private double generateRandomLongitude() {
         double leftLimit = -180;
         double rightLimit = 180;
         return leftLimit + new Random().nextDouble() * (rightLimit - leftLimit);
     }
 
+    /**
+     * Get a random latitude.
+     *
+     * @return a random latitude.
+     */
     private double generateRandomLatitude() {
         double leftLimit = -85.05112878;
         double rightLimit = 85.05112878;
         return leftLimit + new Random().nextDouble() * (rightLimit - leftLimit);
     }
 
+    /**
+     * Get a random Date.
+     *
+     * @return a random Date.
+     */
     private Date getRandomTime() {
         LocalDateTime localDateTime = LocalDateTime.now().minusDays(new Random().nextInt(30));
         return Date.from(localDateTime.toInstant(ZoneOffset.UTC));

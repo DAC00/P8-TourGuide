@@ -33,14 +33,27 @@ public class RewardsService {
         this.rewardsCentral = rewardCentral;
     }
 
+    /**
+     * Set the proximityBuffer.
+     *
+     * @param proximityBuffer the proximityBuffer to set.
+     */
     public void setProximityBuffer(int proximityBuffer) {
         this.proximityBuffer = proximityBuffer;
     }
 
+    /**
+     * Sets a default proximity as the proximityBuffer.
+     */
     public void setDefaultProximityBuffer() {
         proximityBuffer = defaultProximityBuffer;
     }
 
+    /**
+     * Calculate the rewards for a User.
+     *
+     * @param user for whom to calculate reward.
+     */
     public void calculateRewards(User user) {
         CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
         CopyOnWriteArrayList<UserReward> userRewards = new CopyOnWriteArrayList<>(user.getUserRewards());
@@ -83,18 +96,46 @@ public class RewardsService {
         }
     }
 
+    /**
+     * Find if the Attraction is near a Location, using attractionProximityRange to determine the distance limit.
+     *
+     * @param attraction to be compared with.
+     * @param location   to be compared with.
+     * @return true if the Attraction is near the Location.
+     */
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return !(getDistance(attraction, location) > attractionProximityRange);
     }
 
+    /**
+     * Find if the Attraction is near the position of the User, using proximityBuffer to determine the distance limit.
+     *
+     * @param visitedLocation last position of a User.
+     * @param attraction      the Attraction to search.
+     * @return true if the Attraction is near User.
+     */
     private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
         return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
     }
 
+    /**
+     * Get the number of reward points a User can get from an Attraction.
+     *
+     * @param attraction to get points earned from.
+     * @param user       to get rewards for.
+     * @return the reward points.
+     */
     private int getRewardPoints(Attraction attraction, User user) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
     }
 
+    /**
+     * Return a distance in Miles between two locations.
+     *
+     * @param loc1 first Location.
+     * @param loc2 second Location.
+     * @return distance between loc1 and loc2.
+     */
     public double getDistance(Location loc1, Location loc2) {
         double lat1 = Math.toRadians(loc1.latitude);
         double lon1 = Math.toRadians(loc1.longitude);
